@@ -1,10 +1,51 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>จัดเก็บตัวเลข</title>
-<style>
+            <title>จัดเก็บตัวเลข</title>
+  <style>
+/* ===== Login Screen ===== */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.login-box {
+  background: var(--bg-card, #fff);
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  width: 100%;
+  max-width: 360px;
+  margin: 16px;
+  text-align: center;
+}
+
+.login-box h1 {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.login-box p {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.login-box .form-group {
+  text-align: left;
+}
+
+.login-box .btn-primary {
+  margin-top: 8px;
+}
+
 /* ===== CSS Variables & Reset ===== */
 :root {
   --bg: #f0f2f5;
@@ -708,10 +749,31 @@ body {
     border-radius: 16px 16px 0 0;
   }
 }
+
 </style>
 </head>
 <body>
-  <div class="app">
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <h1>📊 จัดเก็บตัวเลข</h1>
+      <p>กรุณาเข้าสู่ระบบ</p>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginUser">ชื่อผู้ใช้</label>
+          <input type="text" id="loginUser" placeholder="Username" required maxlength="50" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="loginPass">รหัสผ่าน</label>
+          <input type="password" id="loginPass" placeholder="Password" required maxlength="50" autocomplete="current-password">
+        </div>
+        <p id="loginError" style="color:var(--danger);font-size:0.85rem;display:none">❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+        <button type="submit" class="btn-primary">🔓 เข้าสู่ระบบ</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="app" id="mainApp" style="display:none">
     <!-- Header -->
     <header class="header">
       <h1>📊 จัดเก็บตัวเลข</h1>
@@ -810,7 +872,7 @@ body {
               <option value="">-- เลือกหมวดหมู่ --</option>
               <option value="เงินเข้า">💰 เงินเข้า</option>
               <option value="เงินออก">💸 เงินออก</option>
-              <option value="ค่างาน">💼 ค่างาน (พิมพ์เอง)</option>
+              <option value="ค่างาน">💼 ค่างาน (พิมพเอง)</option>
             </select>
           </div>
           <div class="form-group">
@@ -819,7 +881,7 @@ body {
           </div>
         </div>
         <div class="form-group" id="customCategoryGroup" style="display:none">
-          <label for="customCategory">ชื่อค่างาน (พิมพ์เอง)</label>
+          <label for="customCategory">ชื่อค่างาน (พิมพเอง)</label>
           <input type="text" id="customCategory" placeholder="เช่น ค่าอาหาร, ค่าสถานที่, ค่าช่างภาพ..." maxlength="100">
         </div>
         <div class="form-group">
@@ -860,8 +922,41 @@ body {
     </nav>
   </div>
 
-<script>
-// ===== Number Tracker - Desktop App =====
+  <script>
+// ===== Login System =====
+(function() {
+  const LOGIN_KEY = 'numberTracker_loggedIn';
+  const VALID_USER = 'Tana';
+  // Simple hash to avoid plaintext password in source
+  const VALID_HASH = '27d29d';
+  function simpleHash(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+    }
+    return (h >>> 0).toString(16);
+  }
+  const loginScreen = document.getElementById('loginScreen');
+  const mainApp = document.getElementById('mainApp');
+  if (sessionStorage.getItem(LOGIN_KEY) === 'true') {
+    loginScreen.style.display = 'none';
+    mainApp.style.display = '';
+  }
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    if (user === VALID_USER && simpleHash(pass) === VALID_HASH) {
+      sessionStorage.setItem(LOGIN_KEY, 'true');
+      loginScreen.style.display = 'none';
+      mainApp.style.display = '';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  });
+})();
+
+// ===== Number Tracker - App Logic =====
 
 const STORAGE_KEY = 'numberTracker_entries';
 const GROUPS_KEY = 'numberTracker_groups';
@@ -1039,7 +1134,7 @@ function populateMonthFilter() {
   const months = new Set();
   entries.forEach(e => {
     if (e.date) {
-      const ym = e.date.slice(0, 7);
+      const ym = e.date.slice(0, 7); // YYYY-MM
       months.add(ym);
     }
   });
@@ -1062,16 +1157,19 @@ function populateMonthFilter() {
 function getFilteredEntries() {
   let filtered = [...entries];
 
+  // Type filter
   const type = filterType.value;
   if (type !== 'all') {
     filtered = filtered.filter(e => getCategoryType(e.category) === type);
   }
 
+  // Month filter
   const month = filterMonth.value;
   if (month !== 'all') {
     filtered = filtered.filter(e => e.date && e.date.startsWith(month));
   }
 
+  // Search
   const query = searchInput.value.trim().toLowerCase();
   if (query) {
     filtered = filtered.filter(e =>
@@ -1081,6 +1179,7 @@ function getFilteredEntries() {
     );
   }
 
+  // Sort by date (newest first), then by creation order
   filtered.sort((a, b) => {
     const dateDiff = (b.date || '').localeCompare(a.date || '');
     if (dateDiff !== 0) return dateDiff;
@@ -1103,6 +1202,7 @@ function renderEntries() {
 
   let html = '';
 
+  // Render groups
   groups.forEach(g => {
     const groupEntries = filtered.filter(e => e.groupId === g.id);
     const allGroupEntries = entries.filter(e => e.groupId === g.id);
@@ -1134,6 +1234,7 @@ function renderEntries() {
       </div>`;
   });
 
+  // Render standalone entries (no group)
   const standalone = filtered.filter(e => !e.groupId);
   if (standalone.length > 0) {
     if (groups.length > 0) {
@@ -1152,6 +1253,7 @@ function renderEntries() {
 function renderEntryItem(e) {
   const type = getCategoryType(e.category);
   const noteHtml = e.note ? ` · ${escapeHtml(e.note)}` : '';
+  // Display work category nicely: "ค่างาน:ค่าช่างภาพ" → "💼 ค่าช่างภาพ"
   let displayCategory = e.category;
   if (e.category && e.category.startsWith(WORK_PREFIX)) {
     displayCategory = '💼 ' + e.category.slice(WORK_PREFIX.length);
@@ -1197,6 +1299,7 @@ entryForm.addEventListener('submit', (e) => {
   const note = $('#entryNote').value.trim();
   const customCat = $('#customCategory').value.trim();
 
+  // If custom work category, build the full category string
   if (category === 'ค่างาน' && customCat) {
     category = WORK_PREFIX + customCat;
   }
@@ -1223,6 +1326,7 @@ entryForm.addEventListener('submit', (e) => {
   renderEntries();
   updateSummary();
 
+  // Reset form but keep date
   const currentDate = date;
   entryForm.reset();
   $('#entryDate').value = currentDate;
@@ -1246,6 +1350,7 @@ $('#entryCategory').addEventListener('change', function() {
 
 // ===== Delete Entry =====
 entriesList.addEventListener('click', (e) => {
+  // Toggle group
   const header = e.target.closest('.group-header');
   if (header && !e.target.closest('.btn-delete-group')) {
     const gId = header.dataset.groupId;
@@ -1258,6 +1363,7 @@ entriesList.addEventListener('click', (e) => {
     return;
   }
 
+  // Delete group
   const delGroup = e.target.closest('.btn-delete-group');
   if (delGroup) {
     const gId = delGroup.dataset.groupId;
@@ -1274,10 +1380,11 @@ entriesList.addEventListener('click', (e) => {
     populateMonthFilter();
     renderEntries();
     updateSummary();
-    showToast('🗑️ ลบกลุ่มแล้ว');
+    showToast('🗁️ ลบกลุ่มแล้ว');
     return;
   }
 
+  // Delete entry
   const btn = e.target.closest('.btn-delete');
   if (!btn) return;
 
@@ -1354,19 +1461,104 @@ clearBtn.addEventListener('click', () => {
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', () => {
     const tabId = btn.dataset.tab;
+
+    // Switch active tab content
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
+
+    // Switch active nav button
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     btn.classList.add('active');
   });
 });
 
+// ===== PWA: Service Worker =====
+// Service Worker disabled in standalone version
+
+// ===== PWA: Install Prompt =====
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    showToast('📲 ติดตั้งแอปเรียบร้อย!');
+  }
+  deferredPrompt = null;
+});
+
+// After adding entry, switch to home tab
 function switchToHome() {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.getElementById('tabHome').classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelector('[data-tab="tabHome"]').classList.add('active');
 }
+
+// ===== Download App (Single HTML offline file) =====
+  showToast('⏳ กำลังสร้างไฟล์...');
+  try {
+    const [cssRes, jsRes] = await Promise.all([
+      fetch('./style.css'),
+      fetch('./app.js')
+    ]);
+    const cssText = await cssRes.text();
+    const jsText = await jsRes.text();
+
+    // Get the HTML structure
+    const htmlEl = document.documentElement.cloneNode(true);
+
+    // Remove external CSS/JS links
+    htmlEl.querySelector('link[href="style.css"]')?.remove();
+    htmlEl.querySelector('link[rel="manifest"]')?.remove();
+    htmlEl.querySelector('script[src="app.js"]')?.remove();
+
+    // Reset dynamic content
+    const entriesEl = htmlEl.querySelector('#entriesList');
+    if (entriesEl) entriesEl.innerHTML = '<p class="empty-state">\ud83d\udced \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23 \u2014 \u0e40\u0e1e\u0e34\u0e48\u0e21\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e41\u0e23\u0e01\u0e40\u0e25\u0e22!</p>';
+
+    // Reset active tab to home
+    htmlEl.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    htmlEl.querySelector('#tabHome')?.classList.add('active');
+    htmlEl.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    htmlEl.querySelector('[data-tab="tabHome"]')?.classList.add('active');
+
+    // Remove install button and download button from offline version
+
+    // Inject inline CSS
+    const styleTag = document.createElement('style');
+    styleTag.textContent = cssText;
+    htmlEl.querySelector('head').appendChild(styleTag);
+
+    // Inject inline JS (remove SW registration for offline file)
+    const cleanJs = jsText.replace(
+      /\/\/ ===== PWA: Service Worker =====.*?register\([^)]+\);/s,
+      '// Service Worker disabled in offline version'
+    );
+    const scriptTag = document.createElement('script');
+    scriptTag.textContent = cleanJs;
+    htmlEl.querySelector('body').appendChild(scriptTag);
+
+    const fullHtml = '<!DOCTYPE html>\n' + htmlEl.outerHTML;
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '\u0e08\u0e31\u0e14\u0e40\u0e01\u0e47\u0e1a\u0e15\u0e31\u0e27\u0e40\u0e25\u0e02.html';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('\ud83d\udcf2 \u0e14\u0e32\u0e27\u0e19\u0e4c\u0e42\u0e2b\u0e25\u0e14\u0e40\u0e23\u0e35\u0e22\u0e1a\u0e23\u0e49\u0e2d\u0e22! \u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f\u0e25\u0e4c\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22');
+  } catch {
+    showToast('\u274c \u0e14\u0e32\u0e27\u0e19\u0e4c\u0e42\u0e2b\u0e25\u0e14\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08');
+  }
+});
+
 </script>
 </body>
 </html>
+ 
