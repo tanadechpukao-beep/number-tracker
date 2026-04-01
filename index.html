@@ -163,7 +163,7 @@ body {
 /* ===== Summary Cards ===== */
 .summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 24px;
 }
@@ -185,6 +185,8 @@ body {
 .card-income { border-left-color: var(--income); background: var(--income-bg); }
 .card-expense { border-left-color: var(--expense); background: var(--expense-bg); }
 .card-work { border-left-color: var(--accent); background: var(--balance-bg); }
+.card-net { border-left-color: #f59e0b; background: #fffbeb; }
+[data-theme="dark"] .card-net { background: #451a03; }
 
 .card-label {
   display: block;
@@ -697,7 +699,7 @@ body {
   }
 
   .summary {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
   }
 
@@ -804,6 +806,10 @@ body {
         <span class="card-label">ค่างาน</span>
         <span class="card-value" id="totalWork">0.00</span>
       </div>
+      <div class="card card-net">
+        <span class="card-label">เงินทั้งหมด</span>
+        <span class="card-value" id="totalNet">0.00</span>
+      </div>
     </section>
 
     <!-- Filter & Search -->
@@ -906,7 +912,7 @@ body {
     <!-- Tab Content: ตั้งค่า -->
     <div class="tab-content" id="tabSettings">
     <section class="form-section">
-      <h2>⚙️ ตั้งค่า</h2>
+      <h2>⚙️ ตั้งค่า</h2>    Zn23
       <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:16px">💾 ข้อมูลถูกเก็บในเครื่องของคุณ (LocalStorage)</p>
       <div class="settings-actions">
         <button id="downloadAppBtn" class="btn-primary btn-block">📲 ดาวน์โหลดแอป (Offline)</button>
@@ -1244,6 +1250,11 @@ function updateSummary() {
   $('#totalIncome').textContent = formatNumber(income);
   $('#totalExpense').textContent = formatNumber(expense);
   $('#totalWork').textContent = formatNumber(work);
+
+  const net = income - expense - work;
+  const netEl = $('#totalNet');
+  netEl.textContent = (net >= 0 ? '+' : '') + formatNumber(net);
+  netEl.style.color = net >= 0 ? 'var(--income)' : 'var(--expense)';
 }
 
 // ===== Group Dropdown =====
