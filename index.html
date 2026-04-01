@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>จัดเก็บตัวเลข</title>
+<style>
+/* ===== CSS Variables & Reset ===== */
+:root {
+  --bg: #f0f2f5;
+  --bg-card: #ffffff;
+  --bg-form: #ffffff;
+  --text: #1a1a2e;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --income: #22c55e;
+  --income-bg: #f0fdf4;
+  --expense: #ef4444;
+  --expense-bg: #fef2f2;
+  --balance: #6366f1;
+  --balance-bg: #eef2ff;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --transition: 0.2s ease;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-form: #1e293b;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --income-bg: #052e16;
+  --expense-bg: #450a0a;
+  --balance-bg: #1e1b4b;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  transition: background var(--transition), color var(--transition);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== App Container ===== */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 16px 80px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 100;
+}
+
+.header h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ===== Summary Cards ===== */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid transparent;
+  transition: all var(--transition);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-income { border-left-color: var(--income); background: var(--income-bg); }
+.card-expense { border-left-color: var(--expense); background: var(--expense-bg); }
+.card-work { border-left-color: var(--accent); background: var(--balance-bg); }
+
+.card-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.card-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-income .card-value { color: var(--income); }
+.card-expense .card-value { color: var(--expense); }
+.card-work .card-value { color: var(--accent); }
+
+/* ===== Form ===== */
+.form-section, .filter-section {
+  background: var(--bg-form);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.form-section h2, .filter-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ===== Filter ===== */
+.filter-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-row input,
+.filter-row select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color var(--transition);
+}
+
+.filter-row input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.filter-row input:focus,
+.filter-row select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ===== Group Form ===== */
+.form-section-group .form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.form-section-group .form-group:last-child {
+  margin-bottom: 12px;
+}
+
+.btn-add-group {
+  white-space: nowrap;
+  padding: 10px 20px;
+}
+
+/* ===== Group Card ===== */
+.group-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+
+.group-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+  gap: 12px;
+  background: var(--bg-card);
+  transition: background var(--transition);
+}
+
+.group-header:hover {
+  background: var(--bg);
+}
+
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.group-toggle {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.group-toggle.open {
+  transform: rotate(90deg);
+}
+
+.group-name {
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.group-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.group-total {
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.group-body {
+  border-top: 1px solid var(--border);
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.group-body.open {
+  max-height: 2000px;
+  padding: 8px 10px;
+}
+
+.group-body .entry-item {
+  border-left: 3px solid var(--accent);
+  margin-left: 8px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  box-shadow: none;
+  background: var(--bg);
+}
+
+.group-body .entry-item:hover {
+  box-shadow: var(--shadow);
+}
+
+.group-body .empty-sub {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 16px;
+}
+
+/* ===== Entries List ===== */
+.entries-section {
+  margin-bottom: 24px;
+}
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.standalone-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+.entry-item {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+  transition: all var(--transition);
+  gap: 12px;
+}
+
+.entry-item:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.entry-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entry-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.entry-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.entry-amount {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.entry-amount.income { color: var(--income); }
+.entry-amount.income::before { content: "+"; }
+.entry-amount.expense { color: var(--expense); }
+.entry-amount.expense::before { content: "-"; }
+.entry-amount.work { color: var(--accent); }
+.entry-amount.work::before { content: "-"; }
+
+.btn-delete {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all var(--transition);
+}
+
+.btn-delete:hover {
+  color: var(--danger);
+  background: var(--expense-bg);
+}
+
+.btn-delete-group {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all var(--transition);
+}
+
+.btn-delete-group:hover {
+  color: var(--danger);
+  background: var(--expense-bg);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn-secondary, .btn-danger {
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-danger {
+  background: var(--bg-card);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ===== Tabs ===== */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Bottom Navigation ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 0;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  z-index: 200;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 12px;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.nav-item.active {
+  color: var(--accent);
+}
+
+.nav-item:active {
+  transform: scale(0.92);
+}
+
+.nav-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.nav-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ===== Settings ===== */
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-block {
+  width: 100%;
+  text-align: center;
+  padding: 14px;
+  font-size: 0.95rem;
+}
+
+/* ===== Toast Notification ===== */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .app {
+    padding: 8px 12px 80px;
+  }
+
+  .header h1 {
+    font-size: 1.15rem;
+  }
+
+  .summary {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .card {
+    padding: 10px 12px;
+  }
+
+  .card-value {
+    font-size: 1rem;
+  }
+
+  .card-label {
+    font-size: 0.75rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-section, .filter-section {
+    padding: 14px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .entry-item {
+    padding: 12px 14px;
+  }
+
+  .entry-amount {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Desktop: center app ===== */
+@media (min-width: 481px) {
+  body {
+    display: flex;
+    justify-content: center;
+  }
+
+  .bottom-nav {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 16px 16px 0 0;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <h1>📊 จัดเก็บตัวเลข</h1>
+      <div class="header-actions">
+        <button id="themeToggle" class="btn-icon" title="สลับธีม">🌙</button>
+      </div>
+    </header>
+
+    <!-- Tab Content: สรุป -->
+    <div class="tab-content active" id="tabHome">
+    <!-- Summary Cards -->
+    <section class="summary">
+      <div class="card card-income">
+        <span class="card-label">เงินเข้า</span>
+        <span class="card-value" id="totalIncome">0.00</span>
+      </div>
+      <div class="card card-expense">
+        <span class="card-label">เงินออก</span>
+        <span class="card-value" id="totalExpense">0.00</span>
+      </div>
+      <div class="card card-work">
+        <span class="card-label">ค่างาน</span>
+        <span class="card-value" id="totalWork">0.00</span>
+      </div>
+    </section>
+
+    <!-- Filter & Search -->
+    <section class="filter-section">
+      <h2>รายการทั้งหมด</h2>
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="🔍 ค้นหารายการ..." maxlength="100">
+        <select id="filterType">
+          <option value="all">ทั้งหมด</option>
+          <option value="income">เงินเข้า</option>
+          <option value="expense">เงินออก</option>
+          <option value="work">ค่างาน</option>
+        </select>
+        <select id="filterMonth">
+          <option value="all">ทุกเดือน</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Entries List -->
+    <section class="entries-section">
+      <div id="entriesList" class="entries-list">
+        <p class="empty-state">📭 ยังไม่มีรายการ — เพิ่มรายการแรกเลย!</p>
+      </div>
+    </section>
+
+    </div><!-- end tabHome -->
+
+    <!-- Tab Content: เพิ่ม -->
+    <div class="tab-content" id="tabAdd">
+
+    <!-- Group Form -->
+    <section class="form-section form-section-group">
+      <h2>📁 สร้างกลุ่มรายการ</h2>
+      <form id="groupForm">
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label for="groupName">ชื่อกลุ่ม</label>
+            <input type="text" id="groupName" placeholder="เช่น ค่าใช้จ่ายงาน มี.ค., ภาษีปี 68..." required maxlength="100">
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn-primary btn-add-group">📁 สร้างกลุ่ม</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Add Entry Form -->
+    <section class="form-section">
+      <h2>เพิ่มรายการ</h2>
+      <form id="entryForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="entryName">รายการ</label>
+            <input type="text" id="entryName" placeholder="เช่น เงินเดือน, ค่าอาหาร..." required maxlength="100">
+          </div>
+          <div class="form-group">
+            <label for="entryAmount">จำนวนเงิน (บาท)</label>
+            <input type="number" id="entryAmount" placeholder="0.00" step="0.01" min="0" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="entryGroup">กลุ่มรายการ (ไม่บังคับ)</label>
+          <select id="entryGroup">
+            <option value="">-- ไม่มีกลุ่ม (รายการเดี่ยว) --</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="entryCategory">หมวดหมู่</label>
+            <select id="entryCategory" required>
+              <option value="">-- เลือกหมวดหมู่ --</option>
+              <option value="เงินเข้า">💰 เงินเข้า</option>
+              <option value="เงินออก">💸 เงินออก</option>
+              <option value="ค่างาน">💼 ค่างาน (พิมพ์เอง)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="entryDate">วันที่</label>
+            <input type="date" id="entryDate" required>
+          </div>
+        </div>
+        <div class="form-group" id="customCategoryGroup" style="display:none">
+          <label for="customCategory">ชื่อค่างาน (พิมพ์เอง)</label>
+          <input type="text" id="customCategory" placeholder="เช่น ค่าอาหาร, ค่าสถานที่, ค่าช่างภาพ..." maxlength="100">
+        </div>
+        <div class="form-group">
+          <label for="entryNote">หมายเหตุ (ไม่บังคับ)</label>
+          <input type="text" id="entryNote" placeholder="รายละเอียดเพิ่มเติม..." maxlength="200">
+        </div>
+        <button type="submit" class="btn-primary">✅ บันทึก</button>
+      </form>
+    </section>
+    </div><!-- end tabAdd -->
+
+    <!-- Tab Content: ตั้งค่า -->
+    <div class="tab-content" id="tabSettings">
+    <section class="form-section">
+      <h2>⚙️ ตั้งค่า</h2>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:16px">💾 ข้อมูลถูกเก็บในเครื่องของคุณ (LocalStorage)</p>
+      <div class="settings-actions">
+        <button id="exportBtn" class="btn-secondary btn-block">📥 ส่งออก CSV</button>
+        <button id="clearBtn" class="btn-danger btn-block">🗑️ ล้างข้อมูลทั้งหมด</button>
+      </div>
+    </section>
+    </div><!-- end tabSettings -->
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="tabHome">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">หน้าแรก</span>
+      </button>
+      <button class="nav-item" data-tab="tabAdd">
+        <span class="nav-icon">➕</span>
+        <span class="nav-label">เพิ่ม</span>
+      </button>
+      <button class="nav-item" data-tab="tabSettings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">ตั้งค่า</span>
+      </button>
+    </nav>
+  </div>
+
+<script>
+// ===== Number Tracker - Desktop App =====
+
+const STORAGE_KEY = 'numberTracker_entries';
+const GROUPS_KEY = 'numberTracker_groups';
+const THEME_KEY = 'numberTracker_theme';
+
+// Category type mapping
+const INCOME_CATEGORIES = ['เงินเข้า'];
+const EXPENSE_CATEGORIES = ['เงินออก'];
+const WORK_PREFIX = 'ค่างาน:';
+
+// ===== State =====
+let entries = [];
+let groups = [];
+
+// ===== DOM Elements =====
+const $ = (sel) => document.querySelector(sel);
+const entryForm = $('#entryForm');
+const groupForm = $('#groupForm');
+const entriesList = $('#entriesList');
+const searchInput = $('#searchInput');
+const filterType = $('#filterType');
+const filterMonth = $('#filterMonth');
+const themeToggle = $('#themeToggle');
+const exportBtn = $('#exportBtn');
+const clearBtn = $('#clearBtn');
+const entryGroup = $('#entryGroup');
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  loadTheme();
+  loadEntries();
+  loadGroups();
+  setDefaultDate();
+  populateMonthFilter();
+  populateGroupDropdown();
+  renderEntries();
+  updateSummary();
+});
+
+// ===== Theme =====
+function loadTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeToggle.textContent = '☀️';
+  }
+}
+
+themeToggle.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    themeToggle.textContent = '🌙';
+    localStorage.setItem(THEME_KEY, 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeToggle.textContent = '☀️';
+    localStorage.setItem(THEME_KEY, 'dark');
+  }
+});
+
+// ===== Data Persistence =====
+function loadEntries() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    entries = data ? JSON.parse(data) : [];
+    if (!Array.isArray(entries)) entries = [];
+  } catch {
+    entries = [];
+  }
+}
+
+function saveEntries() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function loadGroups() {
+  try {
+    const data = localStorage.getItem(GROUPS_KEY);
+    groups = data ? JSON.parse(data) : [];
+    if (!Array.isArray(groups)) groups = [];
+  } catch {
+    groups = [];
+  }
+}
+
+function saveGroups() {
+  localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+}
+
+// ===== Helpers =====
+function getCategoryType(category) {
+  if (INCOME_CATEGORIES.includes(category)) return 'income';
+  if (category && category.startsWith(WORK_PREFIX)) return 'work';
+  return 'expense';
+}
+
+function formatNumber(num) {
+  return Number(num).toLocaleString('th-TH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function setDefaultDate() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  $('#entryDate').value = `${yyyy}-${mm}-${dd}`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ===== Toast =====
+function showToast(message) {
+  let toast = document.querySelector('.toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ===== Summary =====
+function updateSummary() {
+  let income = 0, expense = 0, work = 0;
+
+  entries.forEach(e => {
+    const type = getCategoryType(e.category);
+    const amount = Number(e.amount);
+    if (type === 'income') income += amount;
+    else if (type === 'work') work += amount;
+    else expense += amount;
+  });
+
+  $('#totalIncome').textContent = formatNumber(income);
+  $('#totalExpense').textContent = formatNumber(expense);
+  $('#totalWork').textContent = formatNumber(work);
+}
+
+// ===== Group Dropdown =====
+function populateGroupDropdown() {
+  entryGroup.innerHTML = '<option value="">-- ไม่มีกลุ่ม (รายการเดี่ยว) --</option>';
+  groups.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = `📁 ${g.name}`;
+    entryGroup.appendChild(opt);
+  });
+}
+
+// ===== Month Filter =====
+function populateMonthFilter() {
+  const months = new Set();
+  entries.forEach(e => {
+    if (e.date) {
+      const ym = e.date.slice(0, 7);
+      months.add(ym);
+    }
+  });
+
+  const sorted = [...months].sort().reverse();
+
+  filterMonth.innerHTML = '<option value="all">ทุกเดือน</option>';
+  sorted.forEach(ym => {
+    const [y, m] = ym.split('-');
+    const d = new Date(Number(y), Number(m) - 1);
+    const label = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long' });
+    const opt = document.createElement('option');
+    opt.value = ym;
+    opt.textContent = label;
+    filterMonth.appendChild(opt);
+  });
+}
+
+// ===== Render Entries =====
+function getFilteredEntries() {
+  let filtered = [...entries];
+
+  const type = filterType.value;
+  if (type !== 'all') {
+    filtered = filtered.filter(e => getCategoryType(e.category) === type);
+  }
+
+  const month = filterMonth.value;
+  if (month !== 'all') {
+    filtered = filtered.filter(e => e.date && e.date.startsWith(month));
+  }
+
+  const query = searchInput.value.trim().toLowerCase();
+  if (query) {
+    filtered = filtered.filter(e =>
+      e.name.toLowerCase().includes(query) ||
+      e.category.toLowerCase().includes(query) ||
+      (e.note && e.note.toLowerCase().includes(query))
+    );
+  }
+
+  filtered.sort((a, b) => {
+    const dateDiff = (b.date || '').localeCompare(a.date || '');
+    if (dateDiff !== 0) return dateDiff;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  return filtered;
+}
+
+function renderEntries() {
+  const filtered = getFilteredEntries();
+
+  if (filtered.length === 0 && groups.length === 0) {
+    entriesList.innerHTML = `
+      <p class="empty-state">
+        ${entries.length > 0 ? '🔍 ไม่พบรายการที่ตรงกับตัวกรอง' : '📭 ยังไม่มีรายการ — เพิ่มรายการแรกเลย!'}
+      </p>`;
+    return;
+  }
+
+  let html = '';
+
+  groups.forEach(g => {
+    const groupEntries = filtered.filter(e => e.groupId === g.id);
+    const allGroupEntries = entries.filter(e => e.groupId === g.id);
+    const groupTotal = allGroupEntries.reduce((sum, e) => {
+      const type = getCategoryType(e.category);
+      return type === 'income' ? sum + Number(e.amount) : sum - Number(e.amount);
+    }, 0);
+    const totalClass = groupTotal >= 0 ? 'income' : 'expense';
+
+    html += `
+      <div class="group-card" data-group-id="${escapeHtml(g.id)}">
+        <div class="group-header" data-group-id="${escapeHtml(g.id)}">
+          <div class="group-header-left">
+            <span class="group-toggle">▶</span>
+            <span class="group-name">${escapeHtml(g.name)}</span>
+            <span class="group-count">${allGroupEntries.length} รายการ</span>
+          </div>
+          <div class="group-header-right">
+            <span class="group-total" style="color: var(--${totalClass})">${groupTotal >= 0 ? '+' : ''}${formatNumber(Math.abs(groupTotal))}</span>
+            <button class="btn-delete-group" title="ลบกลุ่ม" data-group-id="${escapeHtml(g.id)}">✕</button>
+          </div>
+        </div>
+        <div class="group-body" data-group-body="${escapeHtml(g.id)}">
+          ${groupEntries.length === 0
+            ? '<p class="empty-sub">ยังไม่มีรายการย่อยในกลุ่มนี้</p>'
+            : groupEntries.map(e => renderEntryItem(e)).join('')
+          }
+        </div>
+      </div>`;
+  });
+
+  const standalone = filtered.filter(e => !e.groupId);
+  if (standalone.length > 0) {
+    if (groups.length > 0) {
+      html += '<div class="standalone-label">รายการเดี่ยว</div>';
+    }
+    html += standalone.map(e => renderEntryItem(e)).join('');
+  }
+
+  if (!html) {
+    html = '<p class="empty-state">🔍 ไม่พบรายการที่ตรงกับตัวกรอง</p>';
+  }
+
+  entriesList.innerHTML = html;
+}
+
+function renderEntryItem(e) {
+  const type = getCategoryType(e.category);
+  const noteHtml = e.note ? ` · ${escapeHtml(e.note)}` : '';
+  let displayCategory = e.category;
+  if (e.category && e.category.startsWith(WORK_PREFIX)) {
+    displayCategory = '💼 ' + e.category.slice(WORK_PREFIX.length);
+  }
+  return `
+    <div class="entry-item" data-id="${escapeHtml(e.id)}">
+      <div class="entry-left">
+        <div class="entry-name">${escapeHtml(e.name)}</div>
+        <div class="entry-meta">${escapeHtml(displayCategory)} · ${formatDate(e.date)}${noteHtml}</div>
+      </div>
+      <div class="entry-right">
+        <span class="entry-amount ${type}">${formatNumber(e.amount)}</span>
+        <button class="btn-delete" title="ลบ" data-id="${escapeHtml(e.id)}">✕</button>
+      </div>
+    </div>`;
+}
+
+// ===== Add Group =====
+groupForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = $('#groupName').value.trim();
+  if (!name) {
+    showToast('⚠️ กรุณาใส่ชื่อกลุ่ม');
+    return;
+  }
+  const group = { id: generateId(), name, createdAt: Date.now() };
+  groups.push(group);
+  saveGroups();
+  populateGroupDropdown();
+  renderEntries();
+  groupForm.reset();
+  showToast('📁 สร้างกลุ่มเรียบร้อย!');
+});
+
+// ===== Add Entry =====
+entryForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const name = $('#entryName').value.trim();
+  const amount = parseFloat($('#entryAmount').value);
+  let category = $('#entryCategory').value;
+  const date = $('#entryDate').value;
+  const note = $('#entryNote').value.trim();
+  const customCat = $('#customCategory').value.trim();
+
+  if (category === 'ค่างาน' && customCat) {
+    category = WORK_PREFIX + customCat;
+  }
+
+  if (!name || isNaN(amount) || amount <= 0 || !category || !date) {
+    showToast('⚠️ กรุณากรอกข้อมูลให้ครบ');
+    return;
+  }
+
+  const entry = {
+    id: generateId(),
+    name,
+    amount,
+    category,
+    date,
+    note,
+    groupId: entryGroup.value || null,
+    createdAt: Date.now()
+  };
+
+  entries.push(entry);
+  saveEntries();
+  populateMonthFilter();
+  renderEntries();
+  updateSummary();
+
+  const currentDate = date;
+  entryForm.reset();
+  $('#entryDate').value = currentDate;
+  $('#customCategoryGroup').style.display = 'none';
+
+  showToast('✅ บันทึกเรียบร้อย!');
+  switchToHome();
+});
+
+// ===== Toggle custom category input =====
+$('#entryCategory').addEventListener('change', function() {
+  const group = $('#customCategoryGroup');
+  if (this.value === 'ค่างาน') {
+    group.style.display = 'block';
+    $('#customCategory').focus();
+  } else {
+    group.style.display = 'none';
+    $('#customCategory').value = '';
+  }
+});
+
+// ===== Delete Entry =====
+entriesList.addEventListener('click', (e) => {
+  const header = e.target.closest('.group-header');
+  if (header && !e.target.closest('.btn-delete-group')) {
+    const gId = header.dataset.groupId;
+    const body = document.querySelector(`[data-group-body="${gId}"]`);
+    const toggle = header.querySelector('.group-toggle');
+    if (body && toggle) {
+      body.classList.toggle('open');
+      toggle.classList.toggle('open');
+    }
+    return;
+  }
+
+  const delGroup = e.target.closest('.btn-delete-group');
+  if (delGroup) {
+    const gId = delGroup.dataset.groupId;
+    const groupEntries = entries.filter(en => en.groupId === gId);
+    const msg = groupEntries.length > 0
+      ? `ต้องการลบกลุ่มนี้พร้อมรายการย่อย ${groupEntries.length} รายการ?`
+      : 'ต้องการลบกลุ่มนี้?';
+    if (!confirm(msg)) return;
+    entries = entries.filter(en => en.groupId !== gId);
+    groups = groups.filter(g => g.id !== gId);
+    saveEntries();
+    saveGroups();
+    populateGroupDropdown();
+    populateMonthFilter();
+    renderEntries();
+    updateSummary();
+    showToast('🗑️ ลบกลุ่มแล้ว');
+    return;
+  }
+
+  const btn = e.target.closest('.btn-delete');
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+  if (!confirm('ต้องการลบรายการนี้?')) return;
+
+  entries = entries.filter(entry => entry.id !== id);
+  saveEntries();
+  populateMonthFilter();
+  renderEntries();
+  updateSummary();
+  showToast('🗑️ ลบแล้ว');
+});
+
+// ===== Filters =====
+searchInput.addEventListener('input', renderEntries);
+filterType.addEventListener('change', renderEntries);
+filterMonth.addEventListener('change', renderEntries);
+
+// ===== Export CSV =====
+exportBtn.addEventListener('click', () => {
+  if (entries.length === 0) {
+    showToast('📭 ไม่มีข้อมูลให้ส่งออก');
+    return;
+  }
+
+  const BOM = '\uFEFF';
+  const header = 'รายการ,จำนวนเงิน,หมวดหมู่,ประเภท,กลุ่ม,วันที่,หมายเหตุ\n';
+  const rows = entries.map(e => {
+    const type = getCategoryType(e.category);
+    const typeName = type === 'income' ? 'เงินเข้า' : type === 'work' ? 'ค่างาน' : 'เงินออก';
+    const groupName = e.groupId ? (groups.find(g => g.id === e.groupId)?.name || '') : '';
+    return [
+      `"${e.name.replace(/"/g, '""')}"`,
+      e.amount,
+      `"${e.category}"`,
+      `"${typeName}"`,
+      `"${groupName.replace(/"/g, '""')}"`,
+      e.date,
+      `"${(e.note || '').replace(/"/g, '""')}"`
+    ].join(',');
+  }).join('\n');
+
+  const blob = new Blob([BOM + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `number-tracker_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📥 ส่งออก CSV เรียบร้อย');
+});
+
+// ===== Clear All =====
+clearBtn.addEventListener('click', () => {
+  if (entries.length === 0) {
+    showToast('📭 ไม่มีข้อมูลให้ล้าง');
+    return;
+  }
+  if (!confirm('⚠️ ต้องการล้างข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถยกเลิกได้')) return;
+
+  entries = [];
+  groups = [];
+  saveEntries();
+  saveGroups();
+  populateGroupDropdown();
+  populateMonthFilter();
+  renderEntries();
+  updateSummary();
+  showToast('🗑️ ล้างข้อมูลเรียบร้อย');
+});
+
+// ===== Tab Navigation =====
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.tab;
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+function switchToHome() {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tabHome').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('[data-tab="tabHome"]').classList.add('active');
+}
+</script>
+</body>
+</html>
