@@ -950,11 +950,15 @@ body {
   </script>
   <script>
 // ===== Login System =====
+let currentUser = null;
 (function() {
   const LOGIN_KEY = 'numberTracker_loggedIn';
-  const VALID_USER = 'Tana';
-  // Simple hash to avoid plaintext password in source
-  const VALID_HASH = '27d29d';
+  const USER_KEY = 'numberTracker_currentUser';
+  const VALID_USERS = {
+    'Tana': '27d29d',
+    'Zena': '2a8c95',
+    'Minn': '24a422'
+  };
   function simpleHash(str) {
     let h = 0;
     for (let i = 0; i < str.length; i++) {
@@ -964,7 +968,8 @@ body {
   }
   const loginScreen = document.getElementById('loginScreen');
   const mainApp = document.getElementById('mainApp');
-  if (sessionStorage.getItem(LOGIN_KEY) === 'true') {
+  if (sessionStorage.getItem(LOGIN_KEY) === 'true' && sessionStorage.getItem(USER_KEY)) {
+    currentUser = sessionStorage.getItem(USER_KEY);
     loginScreen.style.display = 'none';
     mainApp.style.display = '';
   }
@@ -972,8 +977,10 @@ body {
     e.preventDefault();
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value;
-    if (user === VALID_USER && simpleHash(pass) === VALID_HASH) {
+    if (VALID_USERS[user] && simpleHash(pass) === VALID_USERS[user]) {
+      currentUser = user;
       sessionStorage.setItem(LOGIN_KEY, 'true');
+      sessionStorage.setItem(USER_KEY, user);
       loginScreen.style.display = 'none';
       mainApp.style.display = '';
     } else {
@@ -1099,7 +1106,7 @@ function syncToCloud() {
     isSyncing = true;
     lastSyncTime = Date.now();
     localStorage.setItem('numberTracker_syncTime', String(lastSyncTime));
-    window.rtdb.ref('users/Tana').set({
+    window.rtdb.ref('shared').set({
       entries: JSON.stringify(entries),
       groups: JSON.stringify(groups),
       updatedAt: lastSyncTime
@@ -1109,7 +1116,7 @@ function syncToCloud() {
 
 function loadFromCloud() {
   if (!window.rtdb) return Promise.resolve(false);
-  return window.rtdb.ref('users/Tana').once('value').then(snapshot => {
+  return window.rtdb.ref('shared').once('value').then(snapshot => {
     const data = snapshot.val();
     if (data) {
       return applyCloudData(data);
@@ -1148,7 +1155,7 @@ function applyCloudData(data) {
 
 function startRealtimeSync() {
   if (!window.rtdb) return;
-  window.rtdb.ref('users/Tana').on('value', snapshot => {
+  window.rtdb.ref('shared').on('value', snapshot => {
     const data = snapshot.val();
     if (!data || isSyncing) return;
     if (data.updatedAt <= lastSyncTime) return;
@@ -1374,6 +1381,7 @@ function renderEntries() {
 function renderEntryItem(e) {
   const type = getCategoryType(e.category);
   const noteHtml = e.note ? ` · ${escapeHtml(e.note)}` : '';
+  const addedByHtml = e.addedBy ? ` · 👤 ${escapeHtml(e.addedBy)}` : '';
   // Display work category nicely: "ค่างาน:ค่าช่างภาพ" → "💼 ค่าช่างภาพ"
   let displayCategory = e.category;
   if (e.category && e.category.startsWith(WORK_PREFIX)) {
@@ -1383,7 +1391,7 @@ function renderEntryItem(e) {
     <div class="entry-item" data-id="${escapeHtml(e.id)}">
       <div class="entry-left">
         <div class="entry-name">${escapeHtml(e.name)}</div>
-        <div class="entry-meta">${escapeHtml(displayCategory)} · ${formatDate(e.date, e.time)}${noteHtml}</div>
+        <div class="entry-meta">${escapeHtml(displayCategory)} · ${formatDate(e.date, e.time)}${addedByHtml}${noteHtml}</div>
       </div>
       <div class="entry-right">
         <span class="entry-amount ${type}">${formatNumber(e.amount)}</span>
@@ -1440,6 +1448,7 @@ entryForm.addEventListener('submit', (e) => {
     time,
     note,
     groupId: entryGroup.value || null,
+    addedBy: currentUser || 'Unknown',
     createdAt: Date.now()
   };
 
@@ -1537,7 +1546,7 @@ exportBtn.addEventListener('click', () => {
   }
 
   const BOM = '\uFEFF';
-  const header = 'รายการ,จำนวนเงิน,หมวดหมู่,ประเภท,กลุ่ม,วันที่,เวลา,หมายเหตุ\n';
+  const header = 'รายการ,จำนวนเงิน,หมวดหมู่,ประเภท,กลุ่ม,วันที่,เวลา,ผู้เพิ่ม,หมายเหตุ\n';
   const rows = entries.map(e => {
     const type = getCategoryType(e.category);
     const typeName = type === 'income' ? 'เงินเข้า' : type === 'work' ? 'ค่างาน' : 'เงินออก';
@@ -1550,6 +1559,7 @@ exportBtn.addEventListener('click', () => {
       `"${groupName.replace(/"/g, '""')}"`,
       e.date,
       e.time || '',
+      e.addedBy || '',
       `"${(e.note || '').replace(/"/g, '""')}"`
     ].join(',');
   }).join('\n');
