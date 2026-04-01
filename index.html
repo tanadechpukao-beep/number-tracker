@@ -886,6 +886,10 @@ body {
             <input type="date" id="entryDate" required>
           </div>
         </div>
+        <div class="form-group">
+          <label for="entryTime">เวลา (ไม่บังคับ)</label>
+          <input type="time" id="entryTime">
+        </div>
         <div class="form-group" id="customCategoryGroup" style="display:none">
           <label for="customCategory">ชื่อค่างาน (พิมพเอง)</label>
           <input type="text" id="customCategory" placeholder="เช่น ค่าอาหาร, ค่าสถานที่, ค่าช่างภาพ..." maxlength="100">
@@ -1136,13 +1140,15 @@ function formatNumber(num) {
   });
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr, timeStr) {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('th-TH', {
+  let result = d.toLocaleDateString('th-TH', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
   });
+  if (timeStr) result += ` ${timeStr} น.`;
+  return result;
 }
 
 function generateId() {
@@ -1154,7 +1160,10 @@ function setDefaultDate() {
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
+  const hh = String(today.getHours()).padStart(2, '0');
+  const mi = String(today.getMinutes()).padStart(2, '0');
   $('#entryDate').value = `${yyyy}-${mm}-${dd}`;
+  $('#entryTime').value = `${hh}:${mi}`;
 }
 
 function escapeHtml(str) {
@@ -1337,7 +1346,7 @@ function renderEntryItem(e) {
     <div class="entry-item" data-id="${escapeHtml(e.id)}">
       <div class="entry-left">
         <div class="entry-name">${escapeHtml(e.name)}</div>
-        <div class="entry-meta">${escapeHtml(displayCategory)} · ${formatDate(e.date)}${noteHtml}</div>
+        <div class="entry-meta">${escapeHtml(displayCategory)} · ${formatDate(e.date, e.time)}${noteHtml}</div>
       </div>
       <div class="entry-right">
         <span class="entry-amount ${type}">${formatNumber(e.amount)}</span>
@@ -1371,6 +1380,7 @@ entryForm.addEventListener('submit', (e) => {
   const amount = parseFloat($('#entryAmount').value);
   let category = $('#entryCategory').value;
   const date = $('#entryDate').value;
+  const time = $('#entryTime').value || '';
   const note = $('#entryNote').value.trim();
   const customCat = $('#customCategory').value.trim();
 
@@ -1390,6 +1400,7 @@ entryForm.addEventListener('submit', (e) => {
     amount,
     category,
     date,
+    time,
     note,
     groupId: entryGroup.value || null,
     createdAt: Date.now()
@@ -1401,10 +1412,12 @@ entryForm.addEventListener('submit', (e) => {
   renderEntries();
   updateSummary();
 
-  // Reset form but keep date
+  // Reset form but keep date/time
   const currentDate = date;
+  const currentTime = time;
   entryForm.reset();
   $('#entryDate').value = currentDate;
+  $('#entryTime').value = currentTime;
   $('#customCategoryGroup').style.display = 'none';
 
   showToast('✅ บันทึกเรียบร้อย!');
@@ -1487,7 +1500,7 @@ exportBtn.addEventListener('click', () => {
   }
 
   const BOM = '\uFEFF';
-  const header = 'รายการ,จำนวนเงิน,หมวดหมู่,ประเภท,กลุ่ม,วันที่,หมายเหตุ\n';
+  const header = 'รายการ,จำนวนเงิน,หมวดหมู่,ประเภท,กลุ่ม,วันที่,เวลา,หมายเหตุ\n';
   const rows = entries.map(e => {
     const type = getCategoryType(e.category);
     const typeName = type === 'income' ? 'เงินเข้า' : type === 'work' ? 'ค่างาน' : 'เงินออก';
@@ -1499,6 +1512,7 @@ exportBtn.addEventListener('click', () => {
       `"${typeName}"`,
       `"${groupName.replace(/"/g, '""')}"`,
       e.date,
+      e.time || '',
       `"${(e.note || '').replace(/"/g, '""')}"`
     ].join(',');
   }).join('\n');
