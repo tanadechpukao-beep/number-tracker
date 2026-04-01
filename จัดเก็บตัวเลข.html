@@ -3,12 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#6366f1">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ตัวเลข">
-  
-  <title>จัดเก็บตัวเลข</title>
+            <title>จัดเก็บตัวเลข</title>
   <style>
 /* ===== Login Screen ===== */
 .login-screen {
@@ -783,7 +778,6 @@ body {
     <header class="header">
       <h1>📊 จัดเก็บตัวเลข</h1>
       <div class="header-actions">
-        <button id="installBtn" class="btn-icon" title="ติดตั้งแอป" style="display:none">📲</button>
         <button id="themeToggle" class="btn-icon" title="สลับธีม">🌙</button>
       </div>
     </header>
@@ -905,7 +899,6 @@ body {
       <h2>⚙️ ตั้งค่า</h2>
       <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:16px">💾 ข้อมูลถูกเก็บในเครื่องของคุณ (LocalStorage)</p>
       <div class="settings-actions">
-        <button id="downloadAppBtn" class="btn-primary btn-block">📲 ดาวน์โหลดแอป (Offline)</button>
         <button id="exportBtn" class="btn-secondary btn-block">📥 ส่งออก CSV</button>
         <button id="clearBtn" class="btn-danger btn-block">🗑️ ล้างข้อมูลทั้งหมด</button>
       </div>
@@ -1547,20 +1540,17 @@ document.querySelectorAll('.nav-item').forEach(btn => {
   });
 });
 
-// Service Worker disabled in standalone version
-}
+// ===== PWA: Service Worker =====
+// SW disabled
 
 // ===== PWA: Install Prompt =====
 let deferredPrompt;
-const installBtn = $('#installBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = 'flex';
 });
 
-installBtn.addEventListener('click', async () => {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
@@ -1568,7 +1558,6 @@ installBtn.addEventListener('click', async () => {
     showToast('📲 ติดตั้งแอปเรียบร้อย!');
   }
   deferredPrompt = null;
-  installBtn.style.display = 'none';
 });
 
 // After adding entry, switch to home tab
@@ -1580,7 +1569,6 @@ function switchToHome() {
 }
 
 // ===== Download App (Single HTML offline file) =====
-$('#downloadAppBtn').addEventListener('click', async () => {
   showToast('⏳ กำลังสร้างไฟล์...');
   try {
     const [cssRes, jsRes] = await Promise.all([
@@ -1609,8 +1597,6 @@ $('#downloadAppBtn').addEventListener('click', async () => {
     htmlEl.querySelector('[data-tab="tabHome"]')?.classList.add('active');
 
     // Remove install button and download button from offline version
-    htmlEl.querySelector('#installBtn')?.remove();
-    htmlEl.querySelector('#downloadAppBtn')?.remove();
 
     // Inject inline CSS
     const styleTag = document.createElement('style');
