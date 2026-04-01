@@ -665,6 +665,93 @@ body {
   font-size: 0.95rem;
 }
 
+/* ===== Confirm Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-box {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 90%;
+  max-width: 360px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+.modal-box h3 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  color: var(--danger);
+}
+.modal-box p {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+.modal-code-label {
+  font-size: 0.92rem !important;
+  color: var(--text) !important;
+}
+.confirm-code {
+  display: inline-block;
+  background: var(--danger);
+  color: #fff;
+  padding: 2px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 3px;
+  font-family: monospace;
+}
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 3px;
+  font-family: monospace;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+.modal-input:focus {
+  border-color: var(--danger);
+}
+.modal-input.shake {
+  animation: shake 0.4s ease;
+  border-color: var(--danger);
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+.modal-buttons button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+}
+
 /* ===== Toast Notification ===== */
 .toast {
   position: fixed;
@@ -921,6 +1008,20 @@ body {
       </div>
     </section>
     </div><!-- end tabSettings -->
+
+    <!-- Clear Confirmation Modal -->
+    <div id="clearModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3>⚠️ ยืนยันการล้างข้อมูล</h3>
+        <p>การกระทำนี้จะลบข้อมูลทั้งหมดและไม่สามารถยกเลิกได้</p>
+        <p class="modal-code-label">กรุณาพิมพ์รหัส <span id="clearCode" class="confirm-code"></span> เพื่อยืนยัน</p>
+        <input type="text" id="clearCodeInput" class="modal-input" placeholder="พิมพ์รหัสยืนยัน" autocomplete="off">
+        <div class="modal-buttons">
+          <button id="clearConfirmBtn" class="btn-danger">🗑️ ล้างข้อมูล</button>
+          <button id="clearCancelBtn" class="btn-secondary">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
@@ -1586,13 +1687,46 @@ exportBtn.addEventListener('click', () => {
 });
 
 // ===== Clear All =====
+const clearModal = $('#clearModal');
+const clearCodeSpan = $('#clearCode');
+const clearCodeInput = $('#clearCodeInput');
+const clearConfirmBtn = $('#clearConfirmBtn');
+const clearCancelBtn = $('#clearCancelBtn');
+let generatedCode = '';
+
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function openClearModal() {
+  generatedCode = generateCode();
+  clearCodeSpan.textContent = generatedCode;
+  clearCodeInput.value = '';
+  clearCodeInput.classList.remove('shake');
+  clearModal.style.display = 'flex';
+  setTimeout(() => clearCodeInput.focus(), 100);
+}
+
+function closeClearModal() {
+  clearModal.style.display = 'none';
+}
+
 clearBtn.addEventListener('click', () => {
   if (entries.length === 0) {
     showToast('📭 ไม่มีข้อมูลให้ล้าง');
     return;
   }
-  if (!confirm('⚠️ ต้องการล้างข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถยกเลิกได้')) return;
+  openClearModal();
+});
 
+clearConfirmBtn.addEventListener('click', () => {
+  if (clearCodeInput.value.trim() !== generatedCode) {
+    clearCodeInput.classList.remove('shake');
+    void clearCodeInput.offsetWidth;
+    clearCodeInput.classList.add('shake');
+    showToast('❌ รหัสไม่ถูกต้อง');
+    return;
+  }
   entries = [];
   groups = [];
   saveEntries();
@@ -1601,7 +1735,18 @@ clearBtn.addEventListener('click', () => {
   populateMonthFilter();
   renderEntries();
   updateSummary();
+  closeClearModal();
   showToast('🗑️ ล้างข้อมูลเรียบร้อย');
+});
+
+clearCancelBtn.addEventListener('click', closeClearModal);
+
+clearModal.addEventListener('click', (e) => {
+  if (e.target === clearModal) closeClearModal();
+});
+
+clearCodeInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') clearConfirmBtn.click();
 });
 
 // ===== Tab Navigation =====
@@ -1619,7 +1764,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
   });
 });
 
-// Service Worker disabled in standalone version
+
 
 // ===== PWA: Install Prompt =====
 let deferredPrompt;
