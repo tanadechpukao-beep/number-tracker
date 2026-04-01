@@ -1021,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEntries();
   updateSummary();
 
-  // Sync from cloud (merge new data)
+  // Sync from cloud then start realtime listener
   loadFromCloud().then(hasData => {
     if (hasData) {
       populateMonthFilter();
@@ -1030,6 +1030,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSummary();
       showToast('☁️ ซิงค์ข้อมูลจากคลาวด์แล้ว');
     }
+    startRealtimeSync();
   });
 });
 
@@ -1088,15 +1089,21 @@ function saveGroups() {
 
 // ===== Firebase Cloud Sync (Realtime Database) =====
 let syncTimeout = null;
+let lastSyncTime = 0;
+let isSyncing = false;
+
 function syncToCloud() {
   if (!window.rtdb) return;
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(() => {
+    isSyncing = true;
+    lastSyncTime = Date.now();
+    localStorage.setItem('numberTracker_syncTime', String(lastSyncTime));
     window.rtdb.ref('users/Tana').set({
       entries: JSON.stringify(entries),
       groups: JSON.stringify(groups),
-      updatedAt: Date.now()
-    }).catch(() => {});
+      updatedAt: lastSyncTime
+    }).then(() => { isSyncing = false; }).catch(() => { isSyncing = false; });
   }, 500);
 }
 
@@ -1105,25 +1112,55 @@ function loadFromCloud() {
   return window.rtdb.ref('users/Tana').once('value').then(snapshot => {
     const data = snapshot.val();
     if (data) {
-      const cloudEntries = JSON.parse(data.entries || '[]');
-      const cloudGroups = JSON.parse(data.groups || '[]');
-      if (cloudEntries.length > 0 || cloudGroups.length > 0) {
-        if (entries.length === 0 && groups.length === 0) {
-          entries = cloudEntries;
-          groups = cloudGroups;
-        } else {
-          const localIds = new Set(entries.map(e => e.id));
-          cloudEntries.forEach(e => { if (!localIds.has(e.id)) entries.push(e); });
-          const localGIds = new Set(groups.map(g => g.id));
-          cloudGroups.forEach(g => { if (!localGIds.has(g.id)) groups.push(g); });
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-        localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-        return true;
-      }
+      return applyCloudData(data);
     }
     return false;
   }).catch(() => false);
+}
+
+function applyCloudData(data) {
+  const cloudEntries = JSON.parse(data.entries || '[]');
+  const cloudGroups = JSON.parse(data.groups || '[]');
+  const cloudTime = data.updatedAt || 0;
+
+  if (cloudTime <= lastSyncTime) return false;
+
+  const localTime = Number(localStorage.getItem('numberTracker_syncTime') || '0');
+
+  if (entries.length === 0 && groups.length === 0) {
+    // Local is empty — take cloud entirely
+    entries = cloudEntries;
+    groups = cloudGroups;
+  } else if (cloudTime > localTime) {
+    // Cloud is newer — replace local with cloud
+    entries = cloudEntries;
+    groups = cloudGroups;
+  } else {
+    return false;
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+  localStorage.setItem('numberTracker_syncTime', String(cloudTime));
+  lastSyncTime = cloudTime;
+  return true;
+}
+
+function startRealtimeSync() {
+  if (!window.rtdb) return;
+  window.rtdb.ref('users/Tana').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data || isSyncing) return;
+    if (data.updatedAt <= lastSyncTime) return;
+
+    if (applyCloudData(data)) {
+      populateMonthFilter();
+      populateGroupDropdown();
+      renderEntries();
+      updateSummary();
+      showToast('☁️ ข้อมูลอัปเดตจากอุปกรณ์อื่น');
+    }
+  });
 }
 
 // ===== Helpers =====
