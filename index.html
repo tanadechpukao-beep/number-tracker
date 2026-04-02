@@ -3,42 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#6366f1">
+  <meta name="theme-color" content="#b8860b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ตัวเลข">
   
   <title>จัดเก็บตัวเลข</title>
   <style>
+/* ===== Welcome Screen ===== */
+.welcome-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #1a0a00 0%, #2d1810 30%, #4a2c1a 60%, #1a0a00 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.welcome-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.welcome-particles {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 10% 15%, rgba(212,175,55,0.3), transparent),
+    radial-gradient(2px 2px at 25% 45%, rgba(212,175,55,0.2), transparent),
+    radial-gradient(2px 2px at 50% 20%, rgba(212,175,55,0.25), transparent),
+    radial-gradient(2px 2px at 70% 65%, rgba(212,175,55,0.2), transparent),
+    radial-gradient(2px 2px at 85% 30%, rgba(212,175,55,0.3), transparent),
+    radial-gradient(2px 2px at 40% 80%, rgba(212,175,55,0.15), transparent),
+    radial-gradient(2px 2px at 90% 85%, rgba(212,175,55,0.2), transparent);
+  animation: floatParticles 8s ease-in-out infinite alternate;
+}
+
+@keyframes floatParticles {
+  0% { transform: translateY(0) scale(1); opacity: 0.6; }
+  100% { transform: translateY(-20px) scale(1.05); opacity: 1; }
+}
+
+.welcome-content {
+  text-align: center;
+  z-index: 1;
+  padding: 40px 32px;
+  animation: welcomeFadeIn 1s ease-out;
+}
+
+@keyframes welcomeFadeIn {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-emblem {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%);
+  border: 2px solid rgba(212,175,55,0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: emblemGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes emblemGlow {
+  0% { box-shadow: 0 0 20px rgba(212,175,55,0.1), inset 0 0 20px rgba(212,175,55,0.05); }
+  100% { box-shadow: 0 0 40px rgba(212,175,55,0.25), inset 0 0 30px rgba(212,175,55,0.1); }
+}
+
+.emblem-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 10px rgba(212,175,55,0.4));
+}
+
+.welcome-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #d4af37;
+  margin: 0 0 4px;
+  text-shadow: 0 2px 20px rgba(212,175,55,0.3);
+  letter-spacing: 4px;
+}
+
+.welcome-subtitle {
+  font-size: 0.95rem;
+  color: rgba(212,175,55,0.7);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin: 0 0 20px;
+  font-weight: 500;
+}
+
+.welcome-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  margin: 0 auto 20px;
+}
+
+.welcome-game {
+  color: #e8d5b0;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+
+.welcome-game-icon {
+  font-size: 1.2rem;
+}
+
+.welcome-game-en {
+  font-size: 0.82rem;
+  color: rgba(232,213,176,0.5);
+  letter-spacing: 1px;
+}
+
+.welcome-badge {
+  display: inline-block;
+  background: rgba(212,175,55,0.1);
+  border: 1px solid rgba(212,175,55,0.25);
+  color: rgba(212,175,55,0.8);
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  margin-bottom: 32px;
+  letter-spacing: 1px;
+}
+
+.welcome-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto 24px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #d4af37, #b8960c);
+  color: #1a0a00;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(212,175,55,0.3);
+  letter-spacing: 1px;
+}
+
+.welcome-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(212,175,55,0.45);
+  background: linear-gradient(135deg, #e0be4a, #d4af37);
+}
+
+.welcome-btn:active {
+  transform: translateY(0);
+}
+
+.welcome-btn-arrow {
+  font-size: 1.3rem;
+  transition: transform 0.3s ease;
+}
+
+.welcome-btn:hover .welcome-btn-arrow {
+  transform: translateX(4px);
+}
+
+.welcome-footer {
+  color: rgba(232,213,176,0.3);
+  font-size: 0.72rem;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.welcome-screen.fade-out {
+  animation: welcomeFadeOut 0.5s ease-in forwards;
+}
+
+@keyframes welcomeFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
 /* ===== Login Screen ===== */
 .login-screen {
   position: fixed;
   inset: 0;
-  background: var(--bg);
+  background: linear-gradient(160deg, #f5ede0 0%, #ebe0cc 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
 
+[data-theme="dark"] .login-screen {
+  background: linear-gradient(160deg, #1a1209 0%, #221a0e 100%);
+}
+
 .login-box {
-  background: var(--bg-card, #fff);
-  border-radius: 16px;
+  background: var(--bg-card);
+  border-radius: 20px;
   padding: 40px 32px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 32px rgba(90,60,20,0.12);
   width: 100%;
   max-width: 360px;
   margin: 16px;
   text-align: center;
+  border: 1px solid var(--border);
 }
 
 .login-box h1 {
   font-size: 1.5rem;
   margin-bottom: 4px;
+  color: #b8860b;
 }
 
 .login-box p {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-bottom: 24px;
 }
@@ -53,38 +245,38 @@
 
 /* ===== CSS Variables & Reset ===== */
 :root {
-  --bg: #f0f2f5;
-  --bg-card: #ffffff;
-  --bg-form: #ffffff;
-  --text: #1a1a2e;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --income: #22c55e;
-  --income-bg: #f0fdf4;
-  --expense: #ef4444;
-  --expense-bg: #fef2f2;
-  --balance: #6366f1;
-  --balance-bg: #eef2ff;
-  --danger: #dc2626;
-  --danger-hover: #b91c1c;
+  --bg: #f7f1e8;
+  --bg-card: #fffcf7;
+  --bg-form: #fffcf7;
+  --text: #2d1810;
+  --text-secondary: #8b7355;
+  --border: #e0d3be;
+  --accent: #b8860b;
+  --accent-hover: #9a7209;
+  --income: #2d8a4e;
+  --income-bg: #edf7f0;
+  --expense: #c0392b;
+  --expense-bg: #fdf0ee;
+  --balance: #b8860b;
+  --balance-bg: #fdf6e8;
+  --danger: #c0392b;
+  --danger-hover: #a02e22;
   --radius: 12px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow: 0 1px 4px rgba(90,60,20,0.06), 0 1px 2px rgba(90,60,20,0.04);
+  --shadow-lg: 0 4px 16px rgba(90,60,20,0.1);
   --transition: 0.2s ease;
 }
 
 [data-theme="dark"] {
-  --bg: #0f172a;
-  --bg-card: #1e293b;
-  --bg-form: #1e293b;
-  --text: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border: #334155;
-  --income-bg: #052e16;
-  --expense-bg: #450a0a;
-  --balance-bg: #1e1b4b;
+  --bg: #171009;
+  --bg-card: #231a0f;
+  --bg-form: #231a0f;
+  --text: #e8dcc8;
+  --text-secondary: #a08d70;
+  --border: #3a2e1e;
+  --income-bg: #0f2618;
+  --expense-bg: #2a110e;
+  --balance-bg: #2a2008;
   --shadow: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
 }
@@ -133,6 +325,7 @@ body {
 .header h1 {
   font-size: 1.3rem;
   font-weight: 700;
+  color: #b8860b;
 }
 
 .header-actions {
@@ -185,8 +378,8 @@ body {
 .card-income { border-left-color: var(--income); background: var(--income-bg); }
 .card-expense { border-left-color: var(--expense); background: var(--expense-bg); }
 .card-work { border-left-color: var(--accent); background: var(--balance-bg); }
-.card-net { border-left-color: #f59e0b; background: #fffbeb; }
-[data-theme="dark"] .card-net { background: #451a03; }
+.card-net { border-left-color: #d4a017; background: #fdf8ec; }
+[data-theme="dark"] .card-net { background: #2a2008; }
 
 .card-label {
   display: block;
@@ -255,13 +448,13 @@ body {
 .form-group select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.15);
 }
 
 .btn-primary {
   width: 100%;
   padding: 12px;
-  background: var(--accent);
+  background: linear-gradient(135deg, #c49a2a, #b8860b);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -272,7 +465,7 @@ body {
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: linear-gradient(135deg, #b8860b, #9a7209);
   transform: translateY(-1px);
 }
 
@@ -615,7 +808,7 @@ body {
   padding: 6px 0;
   padding-bottom: max(6px, env(safe-area-inset-bottom));
   z-index: 200;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 -2px 12px rgba(90,60,20,0.06);
 }
 
 .nav-item {
@@ -649,6 +842,123 @@ body {
 .nav-label {
   font-size: 0.7rem;
   font-weight: 600;
+}
+
+/* ===== Members ===== */
+.member-role {
+  margin-bottom: 16px;
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.role-icon {
+  font-size: 1.1rem;
+}
+
+.role-name {
+  flex: 1;
+}
+
+.role-count {
+  background: rgba(255,255,255,0.25);
+  padding: 1px 10px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.role-chief {
+  background: linear-gradient(135deg, #d4af37, #b8960c);
+  color: #1a0a00;
+}
+.role-chief .role-count { background: rgba(26,10,0,0.15); }
+
+.role-deputy {
+  background: linear-gradient(135deg, #c0392b, #96281b);
+  color: #fff;
+}
+.role-deputy .role-count { background: rgba(255,255,255,0.2); }
+
+.role-trainer {
+  background: linear-gradient(135deg, #2980b9, #1f6d9e);
+  color: #fff;
+}
+.role-trainer .role-count { background: rgba(255,255,255,0.2); }
+
+.role-regular {
+  background: linear-gradient(135deg, #27ae60, #1e8c4c);
+  color: #fff;
+}
+.role-regular .role-count { background: rgba(255,255,255,0.2); }
+
+.role-trainee {
+  background: linear-gradient(135deg, #8b7355, #6d5a42);
+  color: #fff;
+}
+.role-trainee .role-count { background: rgba(255,255,255,0.2); }
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 8px;
+}
+
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border-radius: 10px;
+  transition: all var(--transition);
+  border: 1px solid var(--border);
+}
+
+.member-card:hover {
+  box-shadow: var(--shadow);
+  transform: translateX(4px);
+}
+
+.member-avatar {
+  font-size: 1.3rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.member-display {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-user {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 /* ===== Settings ===== */
@@ -758,8 +1068,8 @@ body {
   bottom: 90px;
   left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: var(--text);
-  color: var(--bg);
+  background: #3a2e1e;
+  color: #e8dcc8;
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -768,6 +1078,11 @@ body {
   transition: all 0.3s ease;
   z-index: 1000;
   pointer-events: none;
+}
+
+[data-theme="dark"] .toast {
+  background: #e8dcc8;
+  color: #2d1810;
 }
 
 .toast.show {
@@ -783,6 +1098,7 @@ body {
 
   .header h1 {
     font-size: 1.15rem;
+    color: #b8860b;
   }
 
   .summary {
@@ -847,6 +1163,32 @@ body {
 </style>
 </head>
 <body>
+  <!-- Welcome Screen -->
+  <div id="welcomeScreen" class="welcome-screen">
+    <div class="welcome-particles"></div>
+    <div class="welcome-content">
+      <div class="welcome-emblem">
+        <span class="emblem-icon">🏯</span>
+      </div>
+      <h1 class="welcome-title">กรมนา</h1>
+      <p class="welcome-subtitle">Department of Agriculture</p>
+      <div class="welcome-divider"></div>
+      <p class="welcome-game">
+        <span class="welcome-game-icon">💦</span>
+        ชีวิตในสมัยอยุธยา<br>
+        <span class="welcome-game-en">Life In Ayutthaya's</span>
+      </p>
+      <div class="welcome-badge">
+        <span>🎮</span> Roblox Roleplay
+      </div>
+      <button id="welcomeEnterBtn" class="welcome-btn">
+        <span>เข้าสู่ระบบ</span>
+        <span class="welcome-btn-arrow">⟶</span>
+      </button>
+      <p class="welcome-footer">ระบบจัดเก็บข้อมูลตัวเลข — กรมนา</p>
+    </div>
+  </div>
+
   <!-- Login Screen -->
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
@@ -1009,6 +1351,85 @@ body {
     </section>
     </div><!-- end tabSettings -->
 
+    <!-- Tab Content: สมาชิก -->
+    <div class="tab-content" id="tabMembers">
+    <section class="form-section">
+      <h2>👥 สมาชิกกรมเกษตรธิการ</h2>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:16px">Department of Agriculture — Life In Ayutthaya's</p>
+
+      <!-- เจ้ากรมเกษตรธิการ -->
+      <div class="member-role">
+        <div class="role-header role-chief">
+          <span class="role-icon">👑</span>
+          <span class="role-name">เจ้ากรมเกษตรธิการ</span>
+          <span class="role-count">1</span>
+        </div>
+        <div class="member-list">
+          <div class="member-card"><span class="member-avatar">👑</span><div class="member-info"><span class="member-display">YOUDAz</span><span class="member-user">@onrpexch_05</span></div></div>
+        </div>
+      </div>
+
+      <!-- ปลัดกรมเกษตรธิการ -->
+      <div class="member-role">
+        <div class="role-header role-deputy">
+          <span class="role-icon">⭐</span>
+          <span class="role-name">ปลัดกรมเกษตรธิการ</span>
+          <span class="role-count">2</span>
+        </div>
+        <div class="member-list">
+          <div class="member-card"><span class="member-avatar">⭐</span><div class="member-info"><span class="member-display">moominnnnn</span><span class="member-user">@yin_war123</span></div></div>
+          <div class="member-card"><span class="member-avatar">⭐</span><div class="member-info"><span class="member-display">Yangmei</span><span class="member-user">@Adrien2545</span></div></div>
+        </div>
+      </div>
+
+      <!-- ครูฝึกเกษตรธิการ -->
+      <div class="member-role">
+        <div class="role-header role-trainer">
+          <span class="role-icon">🎖️</span>
+          <span class="role-name">ครูฝึกเกษตรธิการ</span>
+          <span class="role-count">1</span>
+        </div>
+        <div class="member-list">
+          <div class="member-card"><span class="member-avatar">🎖️</span><div class="member-info"><span class="member-display">Punch_rakfirstone</span><span class="member-user">@Moin_Jono</span></div></div>
+        </div>
+      </div>
+
+      <!-- พลเกษตรธิการ -->
+      <div class="member-role">
+        <div class="role-header role-regular">
+          <span class="role-icon">🌾</span>
+          <span class="role-name">พลเกษตรธิการ</span>
+          <span class="role-count">3</span>
+        </div>
+        <div class="member-list">
+          <div class="member-card"><span class="member-avatar">🌾</span><div class="member-info"><span class="member-display">win349</span><span class="member-user">@Marwin2345_78</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌾</span><div class="member-info"><span class="member-display">Min</span><span class="member-user">@l8626ml</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌾</span><div class="member-info"><span class="member-display">nxrynnie</span><span class="member-user">@twentiesxz</span></div></div>
+        </div>
+      </div>
+
+      <!-- พลเกษตรธิการฝึกหัด -->
+      <div class="member-role">
+        <div class="role-header role-trainee">
+          <span class="role-icon">🌱</span>
+          <span class="role-name">พลเกษตรธิการฝึกหัด</span>
+          <span class="role-count">7</span>
+        </div>
+        <div class="member-list">
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">ATINatthakar_1</span><span class="member-user">@Natthakar_1</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">Unknown_llUUllSJ</span><span class="member-user">@hudjusjlt</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">Mawin</span><span class="member-user">@veerapatinwza01</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">ROT</span><span class="member-user">@ROTYUIOP_93</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">Nick001</span><span class="member-user">@dOqigu</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">Nemoshop705</span><span class="member-user">@Nemoshop705</span></div></div>
+          <div class="member-card"><span class="member-avatar">🌱</span><div class="member-info"><span class="member-display">Tongretro</span><span class="member-user">@Retro_Tong</span></div></div>
+        </div>
+      </div>
+
+      <p style="text-align:center;color:var(--text-secondary);font-size:0.78rem;margin-top:16px">ทั้งหมด 14 คน • อัปเดต 2 เม.ย. 2569</p>
+    </section>
+    </div><!-- end tabMembers -->
+
     <!-- Clear Confirmation Modal -->
     <div id="clearModal" class="modal-overlay" style="display:none">
       <div class="modal-box">
@@ -1032,6 +1453,10 @@ body {
       <button class="nav-item" data-tab="tabAdd">
         <span class="nav-icon">➕</span>
         <span class="nav-label">เพิ่ม</span>
+      </button>
+      <button class="nav-item" data-tab="tabMembers">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">สมาชิก</span>
       </button>
       <button class="nav-item" data-tab="tabSettings">
         <span class="nav-icon">⚙️</span>
@@ -1073,13 +1498,20 @@ let currentUser = null;
     }
     return (h >>> 0).toString(16);
   }
+  const welcomeScreen = document.getElementById('welcomeScreen');
   const loginScreen = document.getElementById('loginScreen');
   const mainApp = document.getElementById('mainApp');
   if (sessionStorage.getItem(LOGIN_KEY) === 'true' && sessionStorage.getItem(USER_KEY)) {
     currentUser = sessionStorage.getItem(USER_KEY);
+    welcomeScreen.style.display = 'none';
     loginScreen.style.display = 'none';
     mainApp.style.display = '';
   }
+  // Welcome → Login
+  document.getElementById('welcomeEnterBtn').addEventListener('click', function() {
+    welcomeScreen.classList.add('fade-out');
+    setTimeout(function() { welcomeScreen.style.display = 'none'; }, 500);
+  });
   document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const user = document.getElementById('loginUser').value.trim();
